@@ -44,7 +44,6 @@ export const Home = () => {
   };
 
   useEffect(() => {
-    console.log('oi');
     handleLoadPost(0, postsPerPage);
   }, [handleLoadPost, postsPerPage]);
 

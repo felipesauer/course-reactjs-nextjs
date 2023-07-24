@@ -7,10 +7,10 @@ export const Posts = () => {
   const postsContext = useContext(PostsContext);
   const { postsState, postsDispatch } = postsContext;
 
+  console.log(isMounted.current);
+
   useEffect(() => {
-    loadPosts(postsDispatch).then((dispatch) => {
-      if (isMounted.current) dispatch();
-    });
+    if (isMounted.current) loadPosts(postsDispatch);
 
     return () => {
       isMounted.current = false;

@@ -1,1 +1,1 @@
-# study-react
+# course-reactjs-nextjs

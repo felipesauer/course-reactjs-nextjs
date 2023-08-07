@@ -1,54 +1,42 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-const useFetch = (url, options) => {
+const useAsync = (asyncFunction, shouldRun) => {
   const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const urlRef = useRef(url);
-  const optionsRef = useRef(options);
+  const [error, setError] = useState(null);
+  const [status, setStatus] = useState('idle');
+
+  const run = useCallback(() => {
+    setResult(null);
+    setError(null);
+    setStatus('pending');
+
+    return asyncFunction()
+      .then((response) => {
+        setStatus('settled');
+        setResult(response);
+      })
+      .catch((error) => {
+        setStatus('error');
+        setError(error);
+      });
+  }, [asyncFunction]);
 
   useEffect(() => {
-    setLoading(true);
+    if (shouldRun) run();
+  }, [shouldRun, run]);
 
-    let wait = false;
+  return [run, result, error, status];
+};
 
-    const fetchData = async () => {
-      await new Promise((r) => setTimeout(r, 3000));
-      try {
-        const response = await fetch(urlRef.current, optionsRef.current);
-        const jsonResult = await response.json();
-        if (!wait) {
-          setResult(jsonResult);
-          setLoading(false);
-        }
-      } catch (error) {
-        if (!wait) {
-          setLoading(false);
-        }
-        throw error;
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      wait = false;
-    };
-  }, []);
-
-  return [result, loading];
+const fetchData = async () => {
+  const data = await fetch('https://jsonplaceholder.typicode.com/posts');
+  const json = await data.json();
+  return json;
 };
 
 export const Home = () => {
-  const [result, loading] = useFetch('https://jsonplaceholder.typicode.com/posts', {
-    header: {
-      abs: '1',
-    },
-  });
+  const [reFetchData, result, error, status] = useAsync(fetchData, true);
 
-  if (loading) return <p>Loading...</p>;
-
-  if (!loading && result) console.log(result);
-
-  return <h1>Oi</h1>;
+  return <pre>{result && JSON.stringify(result, null, 2)}</pre>;
 };

@@ -1,67 +1,54 @@
-import React, { useCallback, useEffect, useState } from 'react';
+/* eslint-disable no-unused-vars */
+import React, { useEffect, useRef, useState } from 'react';
 
-import './styles.css';
-
-import { loadPost } from '../../utils/load-post';
-import { Posts } from '../../components/Posts';
-import { Button } from '../../components/Button';
-import { TextInput } from '../../components/TextInput';
-
-export const Home = () => {
-  const [posts, setPosts] = useState([]);
-  const [allPosts, setAllPosts] = useState([]);
-  const [page, setPage] = useState(0);
-  const [postsPerPage] = useState(2);
-  const [searchValue, setSearchValue] = useState('');
-
-  const noMorePosts = page + postsPerPage >= allPosts.length;
-  const filteredPosts = searchValue
-    ? posts.filter((post) => {
-        return post.title.toLowerCase().includes(searchValue.toLowerCase());
-      })
-    : posts;
-
-  const handleLoadPost = useCallback(async (page, postsPerPage) => {
-    const postsAndPhotos = await loadPost();
-
-    setPosts(postsAndPhotos.slice(page, postsPerPage));
-    setAllPosts(postsAndPhotos);
-  }, []);
-
-  const handleLoadMorePosts = () => {
-    const nextPage = page + postsPerPage;
-    const nextPosts = allPosts.slice(nextPage, nextPage + postsPerPage);
-
-    posts.push(...nextPosts);
-
-    setPosts(posts);
-    setPage(nextPage);
-  };
-
-  const handleChange = (e) => {
-    const { value } = e.target;
-    setSearchValue(value);
-  };
+const useFetch = (url, options) => {
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const urlRef = useRef(url);
+  const optionsRef = useRef(options);
 
   useEffect(() => {
-    handleLoadPost(0, postsPerPage);
-  }, [handleLoadPost, postsPerPage]);
+    setLoading(true);
 
-  return (
-    <section className="container">
-      <div className="search-container">
-        {!!searchValue && <h1>Search value: {searchValue}</h1>}
+    let wait = false;
 
-        <TextInput searchValue={searchValue} handleChange={handleChange} />
-      </div>
+    const fetchData = async () => {
+      await new Promise((r) => setTimeout(r, 3000));
+      try {
+        const response = await fetch(urlRef.current, optionsRef.current);
+        const jsonResult = await response.json();
+        if (!wait) {
+          setResult(jsonResult);
+          setLoading(false);
+        }
+      } catch (error) {
+        if (!wait) {
+          setLoading(false);
+        }
+        throw error;
+      }
+    };
 
-      {filteredPosts.length > 0 && <Posts posts={filteredPosts} />}
+    fetchData();
 
-      {filteredPosts.length === 0 && <p> Não existem posts :(</p>}
+    return () => {
+      wait = false;
+    };
+  }, []);
 
-      <div className="button-container">
-        {!searchValue && <Button text="Load more posts" onClick={handleLoadMorePosts} disabled={noMorePosts} />}
-      </div>
-    </section>
-  );
+  return [result, loading];
+};
+
+export const Home = () => {
+  const [result, loading] = useFetch('https://jsonplaceholder.typicode.com/posts', {
+    header: {
+      abs: '1',
+    },
+  });
+
+  if (loading) return <p>Loading...</p>;
+
+  if (!loading && result) console.log(result);
+
+  return <h1>Oi</h1>;
 };

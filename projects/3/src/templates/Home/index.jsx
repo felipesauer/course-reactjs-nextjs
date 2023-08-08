@@ -1,5 +1,6 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/react-in-jsx-scope */
-import { useLayoutEffect, useRef, useState } from 'react';
+import { forwardRef, useLayoutEffect, useRef, useState } from 'react';
 
 export const Home = () => {
   const [counted, setCounted] = useState([0, 1, 2, 3, 4]);
@@ -16,18 +17,24 @@ export const Home = () => {
   return (
     <>
       <button onClick={handleClick}>Count {counted.slice(-1)}</button>
-      <div
-        ref={divRef}
-        style={{
-          height: '100px',
-          width: '100px',
-          overflowY: 'scroll',
-        }}
-      >
-        {counted.map((c) => {
-          return <p key={`c-${c}`}>{c}</p>;
-        })}
-      </div>
+      <DisplayCounted counted={counted} ref={divRef} />
     </>
   );
 };
+
+export const DisplayCounted = forwardRef(function DisplayCounted({ counted }, divRef) {
+  return (
+    <div
+      ref={divRef}
+      style={{
+        height: '100px',
+        width: '100px',
+        overflowY: 'scroll',
+      }}
+    >
+      {counted.map((c) => {
+        return <p key={`c-${c}`}>{c}</p>;
+      })}
+    </div>
+  );
+});
